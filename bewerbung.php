@@ -1,13 +1,25 @@
 <!DOCTYPE html>
 <html lang="de">
-<?php include 'header.php';?>
-    <?php
+<?php
+    include 'header.php';
+    if (empty($_GET))
+        {
+            header('Location: index.php');
+            exit;
+        }
         include 'bewerbung.inc.php';
-        if (isset($_GET['get'])){                           # Prüfung ob es sich um einen autorisierten Link handelt
-           auth($_GET['get'], $subfolder);                  # #1
-            if ($_GET['get']==$_SESSION['gets'])            # Hash für den Bewerbungslinkin PDF bzw. QR-Code auf Brief
+        $input = filter_var($_GET['get'], FILTER_SANITIZE_STRING);                          # #6
+        if (isset($input)){                                                                 # Prüfung ob es sich um einen autorisierten Link handelt
+           $_SESSION['gets']= auth($_GET['get'], $subfolder);                               # #1
+            if (empty($_SESSION['gets']))                                                   # #7 ff
+                { // die("Unable to connect to this bad idea");
+                    session_destroy();
+                    header('Location: index.php');
+                    exit;
+                }
+            if (($_GET['get']==$_SESSION['gets'])&&(!empty($_SESSION['gets'])))             # Hash für den Bewerbungslinkin PDF bzw. QR-Code auf Brief
             {
-                $_SESSION['check']=$key;               # Interne Validierung,  sollte geändert werden. Belibig
+                $_SESSION['check']=$key;                                                    # Interne Validierung,  sollte geändert werden. Belibig
                 $_SESSION['get'] = $_GET['get'];
             }
         }
@@ -54,22 +66,20 @@
             <?php if (isset($_SESSION['check'])): ?>
                 <div class="container-fluid">
                     <div clas="row">
-                        <div class="col-lg-5 col-md-4 col-sm-4"> <img src="unTerLagen/pass.png" height="200px;" />
+                        <div class="col-lg-5 col-md-4 col-sm-4"> <img src="<?php echo $subfolder; #10 ?>/pass.png" height="200px;" />
                             <h2> Herzlich Willkommen </h2>
                             <br>
                             <p>Sie sind nun im Ansicht- und Download-Bereich für die Bewerbungsdokumente</p>
                             <br>
                             <?php
-                                 if ($_SESSION['check']==$key)
+                                 if ($_SESSION['check']==$key)                                  #1
                                  {
-                                     $ordner = $_SESSION['get'];
-                                    include 'counter.inc.php';
-                                     $counter=counter($subfolder, $ordner, "count.txt");
-                                     $counter++;
-                                     counterSiteUp($subfolder, $ordner,$counter);
-                                     echo "Counter: $counter";
-                                     $counterFail=counter($subfolder, "bla","count_Fail.txt");
-                                     echo "Fail: $counterFail";
+
+                                     $ordner = $_SESSION['get'];                                #2
+                                     include 'counter.inc.php';                                 #2
+                                     $counter=counter($subfolder, $ordner, "count.txt");        #2
+                                     $counter++;                                                #2
+                                     counterSiteUp($subfolder, $ordner,$counter);               #2
                                     if (isset($_REQUEST['nr']))
                                     {
                                             if (isset($_COOKIE['fnr']))
